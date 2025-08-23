@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>نظام إدارة الاستبيانات بالمستوصفات - تقارير شهرية منفصلة (39 صفحة)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{font-family:"Segoe UI",Tahoma,Arial,Helvetica,sans-serif}
+        :root{
+            --primary:#2c3e50;
+            --secondary:#3498db;
+            --light:#ecf8ff;
+            --light-blue:#d6ecff;
+            --accent:#e74c3c;
+            --success:#2ecc71;
+            --warning:#f39c12;
+            --danger:#e74c3c;
+            --employee:#9b59b6;
+            --muted:#6c7a89;
+            --card-bg:#ffffff;
+        }
+        body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:var(--primary);line-height:1.6;min-height:100vh;padding:18px}
+        .container{max-width:1200px;width:100%;Margin:0 auto}
+        header{background:var(--primary);color:#fff;padding:14px;text-align:center;border-radius:10px;margin-bottom:18px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+        h1{font-size:1.4rem;margin-bottom:6px}
+        .description{font-size:0.95rem;opacity:.95;color:#f0f6fb}
+        .card{background:var(--card-bg);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);margin-bottom:16px;position:relative}
+        .section-title{color:var(--primary);margin-bottom:12px;text-align:center;font-size:1.12rem;padding-bottom:6px;border-bottom:2px solid rgba(52,152,219,0.12)}
+        label{display:block;margin-bottom:8px;font-weight:700;color:var(--primary)}
+        input,select,button,textarea{font-size:14px}
+        input,select,textarea{width:100%;padding:8px 10px;border:1.4px solid #e6ecf1;border-radius:8px;background:#fbfdff}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 3px rgba(52,152,219,0.07)}
+        button{background:var(--secondary);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+        button i{margin-left:6px}
+        button:hover{transform:translateY(-2px)}
+        .btn-success{background:var(--success)}.btn-warning{background:var(--warning)}.btn-danger{background:var(--danger)}.btn-info{background:var(--secondary)}
+        .hidden{display:none}
+        .tabs{display:flex;justify-content:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+        .tab{padding:8px 14px;background:#fff;border-radius:10px;border:1px solid #e6ecf1;cursor:pointer;font-weight:700;color:var(--primary)}
+        .tab.active{background:var(--light-blue);color:var(--primary);border-color:rgba(52,152,219,0.35);box-shadow:0 4px 10px rgba(52,152,219,0.06)}
+        .table-container{background:var(--card-bg);border-radius:10px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,.04);margin-bottom:12px}
+        .survey-table{width:100%;border-collapse:collapse;font-size:13px}
+        .survey-table th,.survey-table td{border:1px solid #eef3f7;padding:8px;text-align:center}
+        .survey-table th{background:var(--secondary);color:#fff}
+        .survey-table tr:nth-child(even){background:#fafafa}
+        .survey-table input{width:90px;padding:6px;text-align:center;border-radius:4px;border:1px solid #e6ecf1}
+        .status-cell{font-weight:700;padding:6px;border-radius:6px}
+        .status-completed{background:#d4edda;color:#155724}
+        .status-partial{background:#fff3cd;color:#856404}
+        .status-not-completed{background:#f8d7da;color:#721c24}
+        .page-tabs{display:flex;gap:8px;flex-wrap:nowrap;justify-content:flex-start;margin:10px 0;overflow:auto;padding-bottom:6px}
+        .page-tab{padding:8px 12px;border-radius:8px;border:1px solid #e6ecf1;background:#fff;cursor:pointer;color:var(--primary);font-weight:700;white-space:nowrap;flex:0 0 auto}
+        .page-tab.active{background:var(--light-blue);color:var(--primary);border-color:rgba(52,152,219,0.3)}
+        .small{font-size:13px;padding:6px 8px}
+        .user-info-bar{background:#f7fbff;padding:10px;border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;gap:8px}
+        .user-role{padding:6px 10px;border-radius:20px;font-weight:700}
+        .role-admin{background:var(--accent);color:#fff}.role-employee{background:var(--employee);color:#fff}
+        .info-message,.success-message,.error-message{padding:10px;border-radius:6px;margin:10px 0;text-align:center}
+        .info-message{background:#eaf8ff;color:#0c5460}
+        .success-message{background:#eafbe9;color:#155724}
+        .error-message{background:#fff0f0;color:#721c24}
+        .owner-badge{font-size:12px;color:#444;margin-top:6px}
+        .admin-subnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;justify-content:center}
+        .admin-subnav button{padding:8px 12px;border-radius:8px;border:1px solid #e6ecf1;background:#fff;color:var(--primary);font-weight:700}
+        .admin-subnav button.active-sub{background:var(--light-blue);border-color:rgba(52,152,219,0.3)}
+        .folder{border:1px dashed #e6eef8;padding:10px;border-radius:8px;margin-bottom:8px;background:#fbfdff}
+        .right{float:right}
+        .animal-btn{padding:6px 10px;border-radius:8px;border:1px solid #e6ecf1;background:#fff;cursor:pointer;font-weight:700}
+        .animal-btn.active{background:var(--secondary);color:#fff}
+        @media (max-width:768px){.survey-table input{width:64px}.page-tabs{justify-content:flex-start}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>نظام إدارة الاستبيانات بالمستوصفات</h1>
+        <p class="description">كل تقرير شهري منفصل — الآن 39 صفحة (مرض لكل صفحة)</p>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="login">تسجيل الدخول</div>
+        <div class="tab hidden" data-tab="employee">لوحة الموظف</div>
+        <div class="tab hidden" data-tab="admin">لوحة الإدارة</div>
+    </div>
+
+    <!-- تسجيل دخول -->
+    <section id="loginSection" class="card">
+        <h2 class="section-title">تسجيل الدخول للنظام</h2>
+        <div class="form-group">
+            <label for="username">اسم المستخدم:</label>
+            <input type="text" id="username" placeholder="أدخل اسم المستخدم" value="admin">
+        </div>
+        <div class="form-group">
+            <label for="password">كلمة المرور:</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور" value="admin123">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+            <button id="loginBtn">تسجيل الدخول <i class="fas fa-sign-in-alt"></i></button>
+        </div>
+        <div class="info-message" style="margin-top:12px">جرب: المسؤول: <strong>admin/admin123</strong> أو الموظف: <strong>employee/employee123</strong></div>
+    </section>
+
+    <!-- لوحة الموظف -->
+    <section id="employeeSection" class="card hidden">
+        <button id="employeeLogout" class="btn-danger" style="position:absolute;left:12px;top:12px">تسجيل الخروج <i class="fas fa-sign-out-alt"></i></button>
+        <div class="user-info-bar">
+            <div>
+                <span id="employeeWelcome">مرحباً، </span>
+                <span class="user-role role-employee" id="employeeRole">موظف</span>
+            </div>
+            <div id="lastSaveInfo">آخر تحديث: غير متاح</div>
+        </div>
+
+        <h2 class="section-title">لوحة الموظف - تعبئة الصفحات وإرسال تقرير شهري منفصل</h2>
+        <div class="info-message"><i class="fas fa-edit"></i> احفظ كل صفحة ثم استخدم "إرسال التقرير الشهري الآن" لإنشاء تقرير شهري منفصل يُخزّن تحت اسمك ومفتاح الشهر.</div>
+
+        <div style="margin:12px 0; text-align:left">
+            <div class="page-tabs" id="employeePageTabs" aria-label="تبويبات الأمراض"></div>
+        </div>
+
+        <div id="employeeTablesWrapper"></div>
+
+        <div class="action-buttons" style="justify-content:center;margin-top:8px;gap:8px;display:flex;flex-wrap:wrap">
+            <button id="saveEmployeeData" class="btn-success">حفظ الصفحة الحالية <i class="fas fa-save"></i></button>
+            <button id="refreshDataBtn" class="btn-info">تحديث العرض <i class="fas fa-sync-alt"></i></button>
+            <button id="employeeExportPageExcelBtn" class="btn-success">تصدير Excel (الصفحة الحالية) <i class="fas fa-file-excel"></i></button>
+            <button id="submitToAdminBtn" class="btn-warning">إرسال الصفحة للمسؤول (حفظ ملف)</button>
+            <button id="sendMonthlyBtn" class="btn-info">إرسال التقرير الشهري الآن <i class="fas fa-calendar-day"></i></button>
+        </div>
+    </section>
+
+    <!-- لوحة الإدارة -->
+    <section id="adminSection" class="card hidden">
+        <button id="adminLogout" class="btn-danger" style="position:absolute;left:12px;top:12px">تسجيل الخروج <i class="fas fa-sign-out-alt"></i></button>
+
+        <div class="user-info-bar">
+            <div>
+                <span id="adminWelcome">مرحباً، </span>
+                <span class="user-role role-admin" id="adminRole">مسؤول</span>
+            </div>
+            <div id="adminLastSaveInfo">آخر تحديث: غير متاح</div>
+        </div>
+
+        <h2 class="section-title">لوحة الإدارة - وارد التقارير (تقارير شهرية منفصلة)</h2>
+
+        <div class="admin-subnav" role="tablist">
+            <button id="subInbox" class="active-sub">وارد التقارير</button>
+            <button id="subCreateClinic">إنشاء مستوصف</button>
+            <button id="subEmployees">إدارة الموظفين</button>
+            <button id="resetSystemBtn" class="btn-danger" title="مسح كل البيانات وإعادة تهيئة النظام">إعادة ضبط النظام (حذف كل البيانات)</button>
+        </div>
+
+        <div id="inboxPane" class="table-container">
+            <h3>وارد التقارير</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+                <label style="margin-bottom:0">فلترة الشهر:</label>
+                <select id="inboxMonthFilter"></select>
+                <button id="refreshInbox" class="btn-info small">تحديث</button>
+                <button id="downloadAllExcel" class="btn-success small">تصدير كل التقارير كمجلد Excel</button>
+            </div>
+            <div id="inboxList"></div>
+        </div>
+
+        <div id="createClinicPane" class="table-container hidden">
+            <h3>إنشاء مستوصف جديد</h3>
+            <div class="form-group"><label>اسم المستوصف:</label><input id="clinicName" type="text"></div>
+            <div style="margin-top:8px;display:flex;gap:8px"><button id="createClinicBtn" class="btn-success">إنشاء مستوصف <i class="fas fa-clinic-medical"></i></button><button id="backToInbox" class="btn-info">رجوع</button></div>
+        </div>
+
+        <div id="employeesPane" class="table-container hidden">
+            <h3>إدارة الموظفين</h3>
+            <div class="form-group"><label>تعيين للمستوصف (عند إنشاء الموظف):</label><select id="clinicAssignSelect"></select></div>
+            <div class="form-group"><label>اسم المستخدم الجديد:</label><input id="newUser" type="text"></div>
+            <div class="form-group"><label>كلمة المرور:</label><input id="newPass" type="password"></div>
+            <div class="form-group"><label>الاسم الكامل:</label><input id="newFullName" type="text"></div>
+            <div style="margin-top:8px"><button id="addEmpBtn" class="btn-success">إضافة موظف وتعيينه للمستوصف <i class="fas fa-user-plus"></i></button></div>
+            <h4 style="margin-top:12px">الموظفين النشطين</h4><div id="activeEmployees"></div>
+            <h4 style="margin-top:12px">الموظفين المؤرشفين</h4><div id="archivedEmployees"></div>
+        </div>
+
+    </section>
+
+    <div id="autoSaveIndicator" class="success-message" style="display:none;position:fixed;right:18px;bottom:18px">تم الحفظ تلقائياً</div>
+</div>
+
+<script>
+/* ---------- بيانات ثابتة ---------- */
+const animals = ["أغنام","ماعز","أبقار","جاموس","كلاب","قطط","خيول","غزال","اسد","أرانب"];
+// 39 أمراض بيطرية (أسماء قابلة للتعديل)
+const diseaseNames = [
+  "الحمى القلاعية (FMD)","الجدري (Pox)","الأورف (Orf)","داء الكلاب (Rabies)","الـMCF (Malignant Catarrhal Fever)","طاعون المجترات الصغيرة (PPR)","الإسهال الفيروسي البقري (BVD)","بارفو الكلاب (Canine Parvovirus)","التهاب الجلد العقدي (LSD)","حمى ثلاث ايام Ephemeral Fever",
+  "التسمم المعوي","احماض ساري","عفونة الدم النزفية H.S","الجمرة العرضية B.L","التهاب الجنب والرئة الباستوريلا","السل البقري B.T","E.Coli","الجمرة الخبيثة Anthrax","لستريا Listeriosis","ثاليريا",
+  "بابيزيا","الذبابة الحلزونية","جرب طفيلي","نغف انف","ديدان كبد","ديدان رئة","ديدان معدة","ديدان امعاء","شريطية","قراد وقمل",
+  "الامراض التنفسية","الامراض الهضمية","الامراض التناسلية","التهابات الضرع","الحساسية","تخمة ونفاخ","نقص فيتامينات ومعادن","التهابات العين والاذن","التهاب العضام والمفاصل","جروح","تسمم غذائي","احتباس مشيمة","التهابات مجاري بولية","خراج","التهابات جلدية","رش حضائر","حمى حليب","امراض اخرى"
+];
+const PAGES = diseaseNames.length;
+
+/* ---------- حالة التطبيق (محلي) ---------- */
+let users = {};
+let surveys = {};
+let clinics = {};
+let archivedClinics = {};
+let folders = {};
+let submissions = {};
+let archivedUsers = {};
+
+let currentUser = null;
+let currentEmployeePage = 0;
+let currentAnimalFilter = null; // NEW: current selected animal to view single-animal page
+
+/* ---------- عناصر DOM ---------- */
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const loginBtn = document.getElementById('loginBtn');
+const employeeLogoutBtn = document.getElementById('employeeLogout');
+const adminLogoutBtn = document.getElementById('adminLogout');
+const employeePageTabs = document.getElementById('employeePageTabs');
+const employeeTablesWrapper = document.getElementById('employeeTablesWrapper');
+const lastSaveInfo = document.getElementById('lastSaveInfo');
+const adminLastSaveInfo = document.getElementById('adminLastSaveInfo');
+const adminWelcome = document.getElementById('adminWelcome');
+const employeeWelcome = document.getElementById('employeeWelcome');
+
+const subInbox = document.getElementById('subInbox');
+const subCreateClinic = document.getElementById('subCreateClinic');
+const subEmployees = document.getElementById('subEmployees');
+
+const inboxList = document.getElementById('inboxList');
+const inboxMonthFilter = document.getElementById('inboxMonthFilter');
+const refreshInbox = document.getElementById('refreshInbox');
+const downloadAllExcel = document.getElementById('downloadAllExcel');
+
+const createClinicBtn = document.getElementById('createClinicBtn');
+const clinicNameInput = document.getElementById('clinicName');
+const backToInbox = document.getElementById('backToInbox');
+
+const clinicAssignSelect = document.getElementById('clinicAssignSelect');
+const addEmpBtn = document.getElementById('addEmpBtn');
+const activeEmployees = document.getElementById('activeEmployees');
+const archivedEmployees = document.getElementById('archivedEmployees');
+
+const resetSystemBtn = document.getElementById('resetSystemBtn');
+
+/* ---------- بنية وادوات ---------- */
+function createEmptyPage(pageIndex){
+    return animals.map((a,i)=>({
+        id:i+1,
+        animal:a,
+        disease: diseaseNames[pageIndex]||'غير محدد',
+        infected:'0',
+        treated:'0',
+        status:'غير مكتمل',
+        owner:null,
+        locked:false
+    }));
+}
+function initSurveys(){ const pages=[]; for(let p=0;p<PAGES;p++) pages.push(createEmptyPage(p)); return pages; }
+
+function monthKeyFromDate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    return `${y}-${m}`;
+}
+function nowMonthKey(){ return monthKeyFromDate(new Date()); }
+
+/* ---------- حفظ/تحميل الحالة (localStorage) ---------- */
+function saveState(){
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('surveys', JSON.stringify(surveys));
+    localStorage.setItem('clinics', JSON.stringify(clinics));
+    localStorage.setItem('archivedClinics', JSON.stringify(archivedClinics));
+    localStorage.setItem('folders', JSON.stringify(folders));
+    localStorage.setItem('submissions', JSON.stringify(submissions));
+    localStorage.setItem('archivedUsers', JSON.stringify(archivedUsers));
+    const now = new Date(), t = now.toLocaleString('ar-EG');
+    localStorage.setItem('lastSave', t);
+    lastSaveInfo.textContent = 'آخر تحديث: ' + t;
+    adminLastSaveInfo.textContent = 'آخر تحديث: ' + t;
+    showAutoSave();
+}
+function loadState(){
+    users = JSON.parse(localStorage.getItem('users')||'{}');
+    surveys = JSON.parse(localStorage.getItem('surveys')||'{}');
+    clinics = JSON.parse(localStorage.getItem('clinics')||'{}');
+    archivedClinics = JSON.parse(localStorage.getItem('archivedClinics')||'{}');
+    folders = JSON.parse(localStorage.getItem('folders')||'{}');
+    submissions = JSON.parse(localStorage.getItem('submissions')||'{}');
+    archivedUsers = JSON.parse(localStorage.getItem('archivedUsers')||'{}');
+    if(Object.keys(users).length===0){
+        users = {
+            "admin":{password:"admin123", role:"admin", fullName:"المسؤول"},
+            "employee":{password:"employee123", role:"employee", fullName:"موظف تجريبي", clinicName:"مستوصف افتراضي"}
+        };
+    }
+    // تأكد من وجود هيكل الاستبيانات لكل مستخدم
+    Object.keys(users).forEach(u=>{ if(!surveys[u]) surveys[u]=initSurveys(); });
+    const last = localStorage.getItem('lastSave');
+    if(last){ lastSaveInfo.textContent = 'آخر تحديث: ' + last; adminLastSaveInfo.textContent = 'آخر تحديث: ' + last; }
+}
+function showAutoSave(){ const el = document.getElementById('autoSaveIndicator'); el.style.display='block'; setTimeout(()=>el.style.display='none',1300); }
+
+/* ---------- مسح شامل (Reset) للنظام ---------- */
+function resetAllData(){
+    if(!confirm('تحذير: هذا الإجراء سيحذف كل البيانات المحفوظة محلياً (المستخدمين، الاستبيانات، المستوصفات، التقارير...). هل تريد المتابعة؟')) return;
+    localStorage.clear();
+    users = {
+        "admin":{password:"admin123", role:"admin", fullName:"المسؤول"},
+        "employee":{password:"employee123", role:"employee", fullName:"موظف تجريبي", clinicName:"مستوصف افتراضي"}
+    };
+    surveys = {};
+    Object.keys(users).forEach(u=> surveys[u] = initSurveys());
+    clinics = {};
+    archivedClinics = {};
+    folders = {};
+    submissions = {};
+    archivedUsers = {};
+    currentUser = null;
+    currentEmployeePage = 0;
+    currentAnimalFilter = null;
+    saveState();
+    renderClinics();
+    renderEmployees();
+    renderInbox();
+    activateTab('login');
+    usernameInput.value = 'admin';
+    passwordInput.value = 'admin123';
+    alert('تمت إعادة ضبط النظام وحذف جميع البيانات. تم استعادة المستخدم الافتراضي (admin/admin123).');
+}
+resetSystemBtn.addEventListener('click', resetAllData);
+
+/* ---------- مستوصفات ---------- */
+function createClinic(name){
+    const id = 'c_' + Date.now();
+    clinics[id] = {id, name, created: new Date().toISOString()};
+    saveState();
+    renderClinics();
+}
+function renderClinics(){
+    clinicAssignSelect.innerHTML = '';
+    const activeKeys = Object.keys(clinics);
+    if(activeKeys.length===0){
+        clinicAssignSelect.innerHTML = '<option value="">-- لا توجد مستوصفات --</option>';
+    } else {
+        activeKeys.forEach(id=>{
+            const o = document.createElement('option'); o.value = id; o.textContent = clinics[id].name; clinicAssignSelect.appendChild(o);
+        });
+    }
+}
+
+/* ---------- بناء تبويبات الصفحات وعرض الجدول ---------- */
+function buildEmployeePageTabs(){
+    employeePageTabs.innerHTML = '';
+    for(let p=0;p<PAGES;p++){
+        const btn = document.createElement('button');
+        btn.className = 'page-tab';
+        btn.textContent = `${p+1} · ${diseaseNames[p]}`;
+        btn.addEventListener('click', ()=>{ currentEmployeePage = p; currentAnimalFilter = null; renderEmployeeTables(); markActivePage(p); });
+        btn.dataset.page = p;
+        employeePageTabs.appendChild(btn);
+    }
+    markActivePage(currentEmployeePage);
+}
+function markActivePage(index){
+    employeePageTabs.querySelectorAll('.page-tab').forEach(b=> b.classList.toggle('active', Number(b.dataset.page)===index));
+    const activeBtn = employeePageTabs.querySelector(`.page-tab[data-page="${index}"]`);
+    if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth',inline:'center'});
+}
+
+// NEW: build list of animal buttons for quick single-animal view
+function buildAnimalButtons(page){
+    const container = document.getElementById('animalButtons');
+    if(!container) return;
+    container.innerHTML = '';
+    // "عرض الكل" زر
+    const allBtn = document.createElement('button'); allBtn.className='animal-btn'; allBtn.textContent='عرض كل الحيوانات';
+    allBtn.addEventListener('click', ()=>{ currentAnimalFilter = null; renderEmployeeTables(); });
+    container.appendChild(allBtn);
+
+    animals.forEach(a=>{
+        const b = document.createElement('button'); b.className='animal-btn'; b.textContent = a;
+        b.addEventListener('click', ()=>{ currentAnimalFilter = a; renderEmployeeTables(); });
+        container.appendChild(b);
+    });
+    // mark active if any
+    setTimeout(()=>{
+        container.querySelectorAll('.animal-btn').forEach(btn=> btn.classList.toggle('active', btn.textContent === currentAnimalFilter));
+    },0);
+}
+
+function renderEmployeeTables(){
+    employeeTablesWrapper.innerHTML = '';
+    if(!currentUser) return;
+    if(!surveys[currentUser]) surveys[currentUser] = initSurveys();
+    const page = currentEmployeePage;
+    const box = document.createElement('div'); box.className='table-container';
+    // Add animal buttons area (user asked: when clicking disease buttons show a page with animal names)
+    box.innerHTML = `<h3>صفحة ${page+1} - ${diseaseNames[page]}</h3>
+        <div id='animalButtons' style='margin:8px 0;display:flex;gap:6px;flex-wrap:wrap'></div>
+        <table class='survey-table'>
+         <thead><tr><th>م</th><th>نوع الحيوان</th><th>اسم المرض</th><th>المصابين</th><th>المعالجين</th><th>الحالة</th></tr></thead>
+         <tbody id='empBody'></tbody></table>`;
+    employeeTablesWrapper.appendChild(box);
+    buildAnimalButtons(page);
+    const tbody = box.querySelector('#empBody');
+
+    surveys[currentUser][page].forEach(row=>{
+        if(currentAnimalFilter && row.animal !== currentAnimalFilter) return; // show only selected animal when filtered
+        const ownedByOther = row.owner && row.owner !== currentUser && row.locked;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.id}</td><td>${row.animal}</td><td>${row.disease}</td>
+            <td><input type='number' id='inf-${page}-${row.id}' value='${row.infected}' ${ownedByOther? 'readonly disabled':''} min='0'></td>
+            <td><input type='number' id='trt-${page}-${row.id}' value='${row.treated}' ${ownedByOther? 'readonly disabled':''} min='0'></td>
+            <td><div id='status-${page}-${row.id}' class='status-cell ${row.status==='مكتمل'?'status-completed':row.status==='جزئي'?'status-partial':'status-not-completed'}'>${row.status}</div>${row.owner? '<div style="font-size:12px;color:var(--muted)">أدخلها: ' + row.owner + '</div>':''}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+/* ---------- حفظ صفحة الموظف (يحفظ القيم في surveys[currentUser]) ---------- */
+function saveEmployeePage(){
+    if(!currentUser) return alert('يجب تسجيل الدخول');
+    const page = currentEmployeePage;
+    surveys[currentUser] = surveys[currentUser] || initSurveys();
+    surveys[currentUser][page].forEach(row=>{
+        const inf = document.getElementById(`inf-${page}-${row.id}`);
+        const trt = document.getElementById(`trt-${page}-${row.id}`);
+        if(!inf || !trt) return;
+        const infected = String(Math.max(0, Number(inf.value)||0));
+        const treated = String(Math.max(0, Number(trt.value)||0));
+        row.infected = infected; row.treated = treated;
+        if(infected !== '0' || treated !== '0'){
+            row.owner = currentUser; row.locked = true;
+            row.status = (infected!=='0' && treated!=='0')? 'مكتمل' : 'جزئي';
+        } else { row.owner = null; row.locked = false; row.status = 'غير مكتمل'; }
+    });
+    saveState();
+    renderEmployeeTables();
+    alert('تم حفظ الصفحة الحالية');
+}
+
+/* ---------- إنشاء تقرير شهري منفصل لموظف ---------- */
+function createMonthlySubmissionForEmployee(username, monthKey=null){
+    if(!users[username]) return null;
+    monthKey = monthKey || nowMonthKey();
+    // نجمع الصفحات المحفوظة داخل surveys[username]
+    const pages = [];
+    let overallInfected=0, overallTreated=0;
+    for(let p=0;p<PAGES;p++){
+        const items = (surveys[username] && surveys[username][p] ? surveys[username][p] : []).map(r=>({id:r.id, animal:r.animal, infected: parseInt(r.infected)||0, treated: parseInt(r.treated)||0}));
+        const pageTotalInf = items.reduce((s,it)=>s+it.infected,0);
+        const pageTotalTrt = items.reduce((s,it)=>s+it.treated,0);
+        if(pageTotalInf>0 || pageTotalTrt>0){
+            pages.push({page:p, disease:diseaseNames[p], items, totalInfected:pageTotalInf, totalTreated:pageTotalTrt});
+            overallInfected += pageTotalInf; overallTreated += pageTotalTrt;
+        }
+    }
+    if(pages.length===0) return null; // لا توجد بيانات
+    const submission = {
+        id: 's_' + Date.now(),
+        month: monthKey,
+        date: new Date().toISOString(),
+        username,
+        fullname: users[username].fullName || username,
+        clinicName: users[username].clinicName || '',
+        pages,
+        totalInfected: overallInfected,
+        totalTreated: overallTreated
+    };
+    submissions[username] = submissions[username] || [];
+    submissions[username].push(submission);
+    ensureFolder(username);
+    folders[username].files = folders[username].files || [];
+    folders[username].files.push({date:submission.date, page:'multi', disease:'تقرير شهري', totalInfected:overallInfected, totalTreated:overallTreated, submissionId: submission.id});
+    saveState();
+
+    // *** TRY SEND TO CLOUD (if firebase script loaded) - added automatically ***
+    if(window.trySendOrQueueSubmission){
+        trySendOrQueueSubmission(submission).then(r=> console.log('trySendOrQueueSubmission result', r)).catch(e=>console.warn(e));
+    }
+
+    return submission;
+}
+function ensureFolder(username){
+    if(!folders[username]) folders[username] = {clinicName: users[username]?.clinicName || '', files: []};
+}
+
+/* ---------- زر: إرسال التقرير الشهري الآن (يحفظ الصفحة الحالية أولاً ثم يجمع) */
+function sendMonthlyByCurrentEmployee(){
+    if(!currentUser) return alert('يجب تسجيل الدخول');
+    // حفظ الصفحة الحالية تلقائياً (حتى لا تفقد القيم التي أدخلتها الآن)
+    saveEmployeePage(); // يطلب حفظ ويعرض رسالة
+    // بعد الحفظ حاوِل إنشاء التقرير
+    const sub = createMonthlySubmissionForEmployee(currentUser, nowMonthKey());
+    if(!sub) return alert('لا توجد بيانات محفوظة في النظام لأي صفحة؛ احفظ بياناتك أولاً.');
+    alert('تم إنشاء التقرير الشهري بنجاح وتم إرساله للمسؤول. يمكنك رؤية الملف في وارد المسؤول.');
+    renderInbox();
+}
+
+/* ---------- زر: إرسال الصفحة الحالية كملف للمسؤول ---------- */
+function submitPageAsFile(username, page){
+    ensureFolder(username);
+    const items = (surveys[username] && surveys[username][page] ? surveys[username][page] : []).map(r=>({id:r.id, animal:r.animal, infected: parseInt(r.infected)||0, treated: parseInt(r.treated)||0}));
+    const totalInfected = items.reduce((s,i)=>s+i.infected,0);
+    const totalTreated = items.reduce((s,i)=>s+i.treated,0);
+    const file = {date: new Date().toISOString(), page, disease: diseaseNames[page], items, totalInfected, totalTreated, submissionId: null};
+    folders[username].files.push(file);
+    const sub = {
+        id: 's_' + Date.now(),
+        month: monthKeyFromDate(new Date(file.date)),
+        date: file.date,
+        username,
+        fullname: users[username].fullName || username,
+        clinicName: users[username].clinicName || '',
+        pages: [{page, disease: file.disease, items, totalInfected, totalTreated}],
+        totalInfected,
+        totalTreated
+    };
+    submissions[username] = submissions[username] || [];
+    submissions[username].push(sub);
+    saveState();
+
+    // also try send to cloud if configured
+    if(window.trySendOrQueueSubmission){
+        trySendOrQueueSubmission(sub).then(r=> console.log('trySendOrQueueSubmission result', r)).catch(e=>console.warn(e));
+    }
+}
+
+/* ---------- إدارة الوارد لدى المسؤول ---------- */
+function getAllMonthKeys(){
+    const set = new Set();
+    Object.values(submissions).forEach(arr=>{
+        arr.forEach(s => set.add(s.month));
+    });
+    const keys = Array.from(set).sort().reverse();
+    return keys;
+}
+function renderInboxMonthsFilter(){
+    const keys = getAllMonthKeys();
+    inboxMonthFilter.innerHTML = '<option value="">كل الأشهر</option>';
+    keys.forEach(k=>{
+        const o = document.createElement('option'); o.value = k; o.textContent = k; inboxMonthFilter.appendChild(o);
+    });
+}
+function renderInbox(){
+    inboxList.innerHTML = '';
+    renderInboxMonthsFilter();
+    const all = [];
+    Object.keys(submissions).forEach(username=>{
+        (submissions[username]||[]).forEach(s => all.push(s));
+    });
+    if(all.length===0){ inboxList.innerHTML = '<p>لا توجد تقارير واردة بعد</p>'; return; }
+    const filter = inboxMonthFilter.value;
+    const filtered = filter ? all.filter(s=> s.month === filter) : all;
+    filtered.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    filtered.forEach(s=>{
+        const div = document.createElement('div'); div.className='folder';
+        let html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${s.fullname}</strong> (${s.username})</div><div style="color:var(--muted)">${s.clinicName||''} - ${s.month}</div></div>`;
+        html += `<div style="margin-top:8px">أُرسل: ${new Date(s.date).toLocaleString('ar-EG')} — صفحات: ${s.pages.length} — المصابين: <strong>${s.totalInfected}</strong> - المعالجين: <strong>${s.totalTreated}</strong></div>`;
+        html += `<div style="margin-top:8px;display:flex;gap:8px"><button class='btn-info small' onclick='viewSubmission("${s.username}","${s.id}")'>عرض</button><button class='btn-success small' onclick='exportSubmissionExcel("${s.username}","${s.id}")'>تصدير Excel</button><button class='btn-danger small' onclick='deleteSubmissionById("${s.username}","${s.id}")'>حذف</button></div>`;
+        div.innerHTML = html;
+        inboxList.appendChild(div);
+    });
+}
+
+/* helpers to find submission by id */
+function findSubmission(username, id){
+    const arr = submissions[username] || [];
+    return arr.find(s=> s.id === id);
+}
+function findAndRemoveSubmission(username, id){
+    if(!submissions[username]) return false;
+    const before = submissions[username].length;
+    submissions[username] = submissions[username].filter(s=> s.id !== id);
+    if(submissions[username].length === 0) delete submissions[username];
+    return submissions[username].length < before;
+}
+
+/* view/export/delete handlers */
+window.viewSubmission = function(username, id){
+    const s = findSubmission(username,id);
+    if(!s) return alert('التقرير غير موجود');
+    let content = `<div dir="rtl"><h2>تقرير - ${s.fullname} (${s.username})</h2><h3>المستوصف: ${s.clinicName} | الشهر: ${s.month} | مرسل: ${new Date(s.date).toLocaleString('ar-EG')}</h3>`;
+    s.pages.forEach(p=>{
+        content += `<h4>الصفحة ${p.page+1} - ${p.disease} (المصابين: ${p.totalInfected} - المعالجين: ${p.totalTreated})</h4>`;
+        content += `<table border="1" style="width:100%;border-collapse:collapse"><thead><tr><th>م</th><th>نوع الحيوان</th><th>عدد المصابين</th><th>عدد المعالجين</th></tr></thead><tbody>`;
+        p.items.forEach(it=> content += `<tr><td>${it.id}</td><td>${it.animal}</td><td>${it.infected}</td><td>${it.treated}</td></tr>`);
+        content += `</tbody></table><br/>`;
+    });
+    content += `<p>الإجمالي الكلي: المصابين ${s.totalInfected} - المعالجين ${s.totalTreated}</p></div>`;
+    const w = window.open('','_blank'); w.document.write(`<html><head><title>تفاصيل التقرير</title><meta charset="utf-8"><style>body{font-family:Arial;direction:rtl}</style></head><body>${content}</body></html>`); w.document.close();
+};
+window.exportSubmissionExcel = function(username, id){
+    const s = findSubmission(username,id);
+    if(!s) return alert('التقرير غير موجود');
+    const aoa = [['الصفحة','م','نوع الحيوان','عدد المصابين','عدد المعالجين']];
+    s.pages.forEach(p=>{
+        aoa.push([`صفحة ${p.page+1} - ${p.disease}`]);
+        p.items.forEach(it=> aoa.push([ '', it.id, it.animal, it.infected, it.treated]));
+        aoa.push(['','إجمالي الصفحة', '', p.totalInfected, p.totalTreated]);
+        aoa.push([]);
+    });
+    aoa.push([]); aoa.push(['الإجمالي الكلي', '', '', s.totalInfected, s.totalTreated]);
+    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, `تقرير_${s.username}_${s.month}`);
+    XLSX.writeFile(wb, `تقرير_${s.username}_${s.month}_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+window.deleteSubmissionById = function(username, id){
+    if(!confirm('هل تريد حذف هذا التقرير؟')) return;
+    const ok = findAndRemoveSubmission(username, id);
+    if(ok){ saveState(); renderInbox(); alert('تم الحذف'); }
+    else alert('لم يتم العثور على التقرير');
+};
+
+/* ---------- export كل التقارير المفلترة إلى ملف Excel واحد مع تبويبات متعددة */
+downloadAllExcel.addEventListener('click', ()=>{
+    const monthFilter = inboxMonthFilter.value;
+    const wb = XLSX.utils.book_new();
+    let any = false;
+    Object.keys(submissions).forEach(username=>{
+        (submissions[username]||[]).forEach(s=>{
+            if(monthFilter && s.month!==monthFilter) return;
+            any = true;
+            const aoa = [['الصفحة','م','نوع الحيوان','عدد المصابين','عدد المعالجين']];
+            s.pages.forEach(p=>{
+                aoa.push([`صفحة ${p.page+1} - ${p.disease}`]);
+                p.items.forEach(it=> aoa.push([ '', it.id, it.animal, it.infected, it.treated]));
+                aoa.push(['','إجمالي الصفحة','','', p.totalInfected]);
+                aoa.push([]);
+            });
+            aoa.push([]); aoa.push(['الإجمالي الكلي', '', '', s.totalInfected, s.totalTreated]);
+            const sheetName = `${s.username}_${s.month}`.slice(0,31);
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+    });
+    if(!any) return alert('لا توجد تقارير لتصديرها حسب الفلتر الحالي');
+    XLSX.writeFile(wb, `wared_reports_${new Date().toISOString().slice(0,10)}.xlsx`);
+});
+
+/* ---------- إضافة صفحة واحدة كملف (زر في الموظف) ---------- */
+document.getElementById('submitToAdminBtn').addEventListener('click', ()=>{
+    if(!currentUser) return alert('يجب تسجيل الدخول');
+    // حفظ الصفحة الحالية أولاً ثم إرسالها
+    saveEmployeePage();
+    submitPageAsFile(currentUser, currentEmployeePage);
+    alert('تم إرسال الصفحة كمِلَف للمسؤول.');
+});
+
+/* ---------- إرسال شهرى من الموظف (زر) ---------- */
+document.getElementById('sendMonthlyBtn').addEventListener('click', sendMonthlyByCurrentEmployee);
+
+/* ---------- admin inbox controls ---------- */
+refreshInbox.addEventListener('click', renderInbox);
+
+/* ---------- موظف جديد وإنشاء فولدر ---------- */
+function addEmployee(username,password,fullName,clinicId){
+    if(users[username]) return alert('اسم المستخدم موجود');
+    const clinicName = clinics[clinicId]?.name || '';
+    users[username] = {password, role:'employee', fullName, clinicName, clinicId, joinDate: new Date().toLocaleDateString('ar-EG')};
+    surveys[username] = initSurveys();
+    folders[username] = {clinicName, files: []};
+    saveState();
+    renderEmployees();
+    renderInbox();
+    alert('تم إنشاء الموظف وتعيينه للمستوصف');
+}
+function renderEmployees(){
+    activeEmployees.innerHTML = ''; archivedEmployees.innerHTML = '';
+    const emps = Object.entries(users).filter(([k,v])=> v.role==='employee');
+    if(emps.length===0) activeEmployees.innerHTML = '<p>لا يوجد موظفين</p>';
+    emps.forEach(([u,v])=>{
+        const div = document.createElement('div'); div.className='folder';
+        div.innerHTML = `<div style='display:flex;justify-content:space-between;align-items:center'><div><strong>${v.fullName}</strong> (${u})<div style='color:var(--muted)'>${v.clinicName||''}</div></div><div><button class='btn-danger small' onclick="archiveEmployee('${u}')">حذف</button></div></div>`;
+        activeEmployees.appendChild(div);
+    });
+    const arch = Object.entries(archivedUsers);
+    if(arch.length===0) archivedEmployees.innerHTML = '<p>لا يوجد موظفين مؤرشفين</p>';
+    arch.forEach(([u,v])=>{
+        const div = document.createElement('div'); div.className='folder';
+        div.innerHTML = `<div><strong>${v.fullName}</strong> (${u})<div style='color:var(--muted)'>محذوف منذ: ${v.deleteDate}</div></div><div style='margin-top:8px'><button class='btn-success small' onclick="restoreEmployee('${u}')">استعادة</button></div>`;
+        archivedEmployees.appendChild(div);
+    });
+}
+function archiveEmployee(u){
+    if(u===currentUser) return alert('لا يمكنك حذف حسابك');
+    if(confirm('هل تريد حذف الموظف؟')){
+        archivedUsers[u] = {...users[u], deleteDate:new Date().toLocaleDateString('ar-EG')};
+        delete users[u]; delete surveys[u]; delete folders[u];
+        saveState();
+        renderEmployees(); renderInbox();
+    }
+}
+function restoreEmployee(u){
+    if(!archivedUsers[u]) return;
+    users[u] = {...archivedUsers[u]}; delete users[u].deleteDate;
+    surveys[u] = initSurveys();
+    delete archivedUsers[u];
+    saveState();
+    renderEmployees();
+}
+
+/* ---------- واجهات التبديل وتسجيل الخروج ---------- */
+function activateTab(tab){
+    document.querySelectorAll('.tab').forEach(t=>{
+        t.classList.toggle('active', t.dataset.tab===tab);
+        t.classList.toggle('hidden', t.dataset.tab!==tab);
+    });
+    if(tab==='login'){
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('employeeSection').classList.add('hidden');
+        document.getElementById('adminSection').classList.add('hidden');
+    } else if(tab==='employee'){
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('employeeSection').classList.remove('hidden');
+        document.getElementById('adminSection').classList.add('hidden');
+        buildEmployeePageTabs(); renderEmployeeTables();
+    } else if(tab==='admin'){
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('employeeSection').classList.add('hidden');
+        document.getElementById('adminSection').classList.remove('hidden');
+        document.getElementById('inboxPane').classList.remove('hidden');
+        document.getElementById('createClinicPane').classList.add('hidden');
+        document.getElementById('employeesPane').classList.add('hidden');
+        renderClinics(); renderEmployees(); renderInbox();
+    }
+}
+function doLogout(){
+    currentUser = null;
+    usernameInput.value = 'admin'; passwordInput.value = 'admin123';
+    activateTab('login');
+    alert('تم تسجيل الخروج');
+}
+
+/* ---------- أحداث DOM ---------- */
+loginBtn.addEventListener('click', ()=>{
+    const u = usernameInput.value.trim(); const p = passwordInput.value.trim();
+    if(!u||!p) return alert('املأ الحقول');
+    if(users[u] && users[u].password === p){
+        currentUser = u;
+        // تأكد من وجود هيكل الاستبيان للمستخدم
+        if(!surveys[currentUser]) surveys[currentUser] = initSurveys();
+        if(users[u].role === 'admin'){
+            activateTab('admin');
+            adminWelcome.textContent = users[u].fullName || 'المسؤول';
+        } else {
+            activateTab('employee');
+            employeeWelcome.textContent = users[u].fullName + (users[u].clinicName? ' - ' + users[u].clinicName : '');
+        }
+        buildEmployeePageTabs(); renderEmployeeTables();
+    } else alert('بيانات الدخول خاطئة');
+});
+employeeLogoutBtn.addEventListener('click', doLogout);
+adminLogoutBtn.addEventListener('click', doLogout);
+
+subInbox.addEventListener('click', ()=>{ document.getElementById('inboxPane').classList.remove('hidden'); document.getElementById('createClinicPane').classList.add('hidden'); document.getElementById('employeesPane').classList.add('hidden'); subInbox.classList.add('active-sub'); subCreateClinic.classList.remove('active-sub'); subEmployees.classList.remove('active-sub'); renderInbox();});
+subCreateClinic.addEventListener('click', ()=>{ document.getElementById('inboxPane').classList.add('hidden'); document.getElementById('createClinicPane').classList.remove('hidden'); document.getElementById('employeesPane').classList.add('hidden'); subCreateClinic.classList.add('active-sub'); subInbox.classList.remove('active-sub'); subEmployees.classList.remove('active-sub'); });
+subEmployees.addEventListener('click', ()=>{ document.getElementById('inboxPane').classList.add('hidden'); document.getElementById('createClinicPane').classList.add('hidden'); document.getElementById('employeesPane').classList.remove('hidden'); subEmployees.classList.add('active-sub'); subInbox.classList.remove('active-sub'); subCreateClinic.classList.remove('active-sub'); renderEmployees(); });
+
+createClinicBtn.addEventListener('click', ()=>{ const name = clinicNameInput.value.trim(); if(!name) return alert('ادخل اسم المستوصف'); createClinic(name); clinicNameInput.value=''; });
+backToInbox.addEventListener('click', ()=> subInbox.click());
+
+addEmpBtn.addEventListener('click', ()=>{ const user = document.getElementById('newUser').value.trim(); const pass = document.getElementById('newPass').value.trim(); const full = document.getElementById('newFullName').value.trim(); const clinicId = clinicAssignSelect.value; if(!user||!pass||!full||!clinicId) return alert('املأ جميع الحقول واختر مستوصف'); addEmployee(user,pass,full,clinicId); document.getElementById('newUser').value=''; document.getElementById('newPass').value=''; document.getElementById('newFullName').value=''; });
+
+document.getElementById('saveEmployeeData').addEventListener('click', saveEmployeePage);
+document.getElementById('refreshDataBtn').addEventListener('click', ()=>{ renderEmployeeTables(); alert('تم تحديث العرض'); });
+
+refreshInbox.addEventListener('click', renderInbox);
+
+/* ---------- init ---------- */
+loadState();
+renderClinics();
+renderEmployees();
+renderInbox();
+</script>
+
+<!-- ===== Firebase simple sync (مضاف تلقائياً) ===== -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script>
+  // ضع إعدادات firebaseConfig التي أعطاك إياها Firebase (هي نفسها التي زودتني بها)
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4pmHHJmSfMDk6p7SjaQIhNU_VPJz41Vw",
+    authDomain: "prjkt11-b6a14.firebaseapp.com",
+    projectId: "prjkt11-b6a14",
+    storageBucket: "prjkt11-b6a14.firebasestorage.app",
+    messagingSenderId: "819570139289",
+    appId: "1:819570139289:web:918f996911f539052fd808",
+    measurementId: "G-NHYY5YWDZK"
+  };
+
+  // init
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // enable offline persistence if possible
+  if(db.enablePersistence){
+    db.enablePersistence().catch(function(err){
+      console.warn('firebase enablePersistence failed:', err && err.code ? err.code : err);
+    });
+  }
+
+  // key for local pending queue (used if immediate send fails or offline)
+  const PENDING_KEY = 'pending_to_cloud_v1';
+
+  function queueLocal(sub){
+    try{
+      const q = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+      q.push(sub);
+      localStorage.setItem(PENDING_KEY, JSON.stringify(q));
+    }catch(e){
+      console.warn('queueLocal error', e);
+    }
+  }
+
+  async function sendSubmissionToCloudDirect(sub){
+    try{
+      await db.collection('submissions').add({
+        ...sub,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return {ok:true};
+    }catch(e){
+      console.warn('sendSubmissionToCloudDirect failed', e);
+      return {ok:false, error:String(e)};
+    }
+  }
+
+  async function trySendOrQueueLocal(sub){
+    // if online try direct; if fails queue local
+    if(navigator.onLine){
+      const r = await sendSubmissionToCloudDirect(sub);
+      if(!r.ok){
+        queueLocal(sub);
+        return {ok:false, queued:true, error:r.error};
+      } else return {ok:true, sent:true};
+    } else {
+      queueLocal(sub);
+      return {ok:false, queued:true, error:'offline'};
+    }
+  }
+
+  // flush pending local queue to Firestore
+  async function flushPendingLocalToCloud(){
+    const arr = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+    if(!arr.length) return {ok:true, sent:0};
+    let sent = 0;
+    const remaining = [];
+    for(const s of arr){
+      const r = await sendSubmissionToCloudDirect(s);
+      if(r.ok) sent++;
+      else remaining.push(s);
+    }
+    localStorage.setItem(PENDING_KEY, JSON.stringify(remaining));
+    console.log('flushPendingLocalToCloud:', {sent, remaining: remaining.length});
+    return {ok:true, sent, remaining: remaining.length};
+  }
+
+  // global helper (usable from your app code)
+  window.trySendOrQueueSubmission = async function(subObj){
+    if(!subObj) return {ok:false, error:'no-submission'};
+    try{
+      const res = await trySendOrQueueLocal(subObj);
+      return res;
+    }catch(e){
+      console.warn('trySendOrQueueSubmission error', e);
+      try{ queueLocal(subObj); }catch(_){}
+      return {ok:false, queued:true, error:String(e)};
+    }
+  };
+
+  // auto flush on load/online
+  window.addEventListener('load', ()=>{ setTimeout(()=>flushPendingLocalToCloud(), 800); });
+  window.addEventListener('online', ()=>{ flushPendingLocalToCloud(); });
+
+  // convenience: function to view remote submissions (for admin debugging)
+  window.fetchRemoteSubmissions = async function(limit=100){
+    const snap = await db.collection('submissions').orderBy('createdAt','desc').limit(limit).get();
+    const arr = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    return arr;
+  };
+
+  console.log('Firebase sync initialized. If you want to see remote data, call fetchRemoteSubmissions().');
+</script>
+
+</body>
+</html>
